@@ -1,9 +1,13 @@
 package login
 
 import (
+	"errors"
+	"path"
+
 	"github.com/suite911/error911"
 
 	"github.com/pkg/browser"
+	pkgErrors "github.com/pkg/errors"
 	"github.com/valyala/fasthttp"
 )
 
@@ -28,7 +32,7 @@ func LogIn(host string) error {
 			continue
 		}
 		var args fasthttp.Args
-		statusCode, body, err := fasthttp.Post(nil, url, &args)
+		statusCode, body, err := fasthttp.Post(nil, path.Join(), &args)
 		if err != nil {
 			return err
 		}
