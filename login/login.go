@@ -19,8 +19,6 @@ type Login struct {
 }
 
 type Account struct {
-	Email       string `json:"email"`
-	Username    string `json:"username"`
 	RowID       int64  `json:"rowid"`
 	HasPassword bool   `json:"has_pw"`
 }
