@@ -3,6 +3,7 @@ package login
 import (
 	"github.com/suite911/error911"
 
+	"github.com/pkg/browser"
 	"github.com/valyala/fasthttp"
 )
 
@@ -24,6 +25,12 @@ func LogIn(host string) error {
 			if err := register(login.Email, login.Username); err != nil {
 				return err
 			}
+			continue
+		}
+		var args fasthttp.Args
+		statusCode, body, err := fasthttp.Post(nil, url, &args)
+		if err != nil {
+			return err
 		}
 		// look up
 
@@ -44,6 +51,7 @@ func LogIn(host string) error {
 }
 
 func register(host, email, username string) error { // TODO: autofill email and username
+	// browser.OpenURL panics on unsupported operating systems
 	defer func() {
 		if err := recover(); err != nil {
 			return err
