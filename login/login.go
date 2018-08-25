@@ -19,6 +19,7 @@ type Login struct {
 }
 
 type Account struct {
+	ID          int64  `json:"id"`
 	RowID       int64  `json:"rowid"`
 	HasPassword bool   `json:"has_pw"`
 }
