@@ -16,25 +16,37 @@ type Login struct {
 	var PasswordHash    []byte
 }
 
+type Account struct {
+}
+
 func LogIn(host string) error {
 	var login Login
-	var password string
+	var msg, password string
 	var button int8
+	user := path.Join(host, "user")
 	for {
-		dialog.New("email", &login.Email, &username, &button)
+		dialog.New("email", &login.Email, &username, &button, msg)
 		switch button {
 		case dialog.Cancel:
 			return error911.NewCancel()
 		case dialog.Register:
-			if err := register(login.Email, login.Username); err != nil {
+			if err := register(host, login.Email, login.Username); err != nil {
 				return err
 			}
 			continue
 		}
 		var args fasthttp.Args
-		statusCode, body, err := fasthttp.Post(nil, path.Join(), &args)
+		statusCode, body, err := fasthttp.Post(nil, user, &args)
 		if err != nil {
 			return err
+		}
+		switch statusCode {
+		case 200:
+		case 404:
+			msg = "E-mail or username not found."
+			continue
+		default:
+			return pkgErrors.Wrap(errors.New("HTTP "+strconv.Itoa(statusCode)), user)
 		}
 		// look up
 
