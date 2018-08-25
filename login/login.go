@@ -19,10 +19,10 @@ type Login struct {
 }
 
 type Account struct {
-	Email      string `json:"email"`
-	Username   string `json:"username"`
-	RowID      int64  `json:"rowid"`
-	NewAccount bool   `json:"new_acct"`
+	Email       string `json:"email"`
+	Username    string `json:"username"`
+	RowID       int64  `json:"rowid"`
+	HasPassword bool   `json:"has_pw"`
 }
 
 func LogIn(host string) error {
@@ -59,10 +59,10 @@ func LogIn(host string) error {
 		if err := json.Unmarshal(body, &account); err != nil {
 			return err
 		}
-		if account.NewAccount {
-			// new account -- create a password
-		} else {
+		if account.HasPassword {
 			// old account -- ask for their password
+		} else {
+			// new account -- create a password
 		}
 
 		password = ""
