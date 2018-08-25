@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/browser"
 	pkgErrors "github.com/pkg/errors"
 	"github.com/valyala/fasthttp"
+	"golang.org/x/crypto/argon2"
 )
 
 type Account struct {
