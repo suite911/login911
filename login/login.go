@@ -61,6 +61,7 @@ func LogIn(host string) (*Token, error) {
 		if err := json.Unmarshal(body, &account); err != nil {
 			return nil, err
 		}
+		var token *Token
 		for {
 			var password, retype string
 			if account.HasPassword {
@@ -71,13 +72,14 @@ func LogIn(host string) (*Token, error) {
 				dialog.New("password", &password, &retype, &button)
 			}
 			if button == dialog.Cancel {
-				return nil, error911.NewCancel()
+				break
 			}
 			if account.HasPassword {
 				// old account -- verify their password
 			} else {
 				// new account -- set their password
 				if retype != password {
+					msg = "The passwords don't match." // TODO: translate
 					continue
 				}
 			}
@@ -89,26 +91,18 @@ func LogIn(host string) (*Token, error) {
 			switch statusCode {
 			case 200, 201:
 			case 404:
-				msg = "E-mail or username not found." // TODO: translate
+				msg = "It doesn't look like that was your password." // TODO: translate
 				continue
 			default:
 				return nil, pkgErrors.Wrap(errors.New("HTTP "+strconv.Itoa(statusCode)), user)
 			}
-		}
-
-		password = ""
-		button = dialog.Cancel
-		dialog.New("log in", &email, &password, &username, &button)
-		switch button {
-		case dialog.Cancel:
-			return
-		case dialog.LogIn:
-			fmt.Println("Logging in as (\""+email+"\", \""+username+"\")")
-		case dialog.Register:
-			if err := browser.OpenURL("https://localhost:10443/register"); err != nil {
-				panic(err)
+			token = new(Token)
+			if err := json.Unmarshal(body, &token); err != nil {
+				return nil, err
 			}
+			return token, nil
 		}
+		continue
 	}
 }
 
