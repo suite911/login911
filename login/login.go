@@ -45,6 +45,8 @@ func LogIn(host string) (*Token, error) {
 			continue
 		}
 		var args fasthttp.Args
+		args.Set("email", email)
+		args.Set("username", username)
 		statusCode, body, err := fasthttp.Post(nil, user, &args)
 		if err != nil {
 			return nil, err
@@ -85,6 +87,9 @@ func LogIn(host string) (*Token, error) {
 				}
 			}
 			var args fasthttp.Args
+			args.Set("rowid", strconv.FormatInt(account.RowID, 10))
+			args.Set("id", strconv.FormatInt(account.ID, 10))
+			args.Set("hash", hash)
 			statusCode, body, err := fasthttp.Post(nil, logIn, &args)
 			if err != nil {
 				return nil, err
