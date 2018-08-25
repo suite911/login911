@@ -1,8 +1,10 @@
 package login
 
 import (
+	"encoding/json"
 	"errors"
 	"path"
+	"strconv"
 
 	"github.com/suite911/error911"
 
@@ -17,6 +19,10 @@ type Login struct {
 }
 
 type Account struct {
+	Email      string `json:"email"`
+	Username   string `json:"username"`
+	RowID      int64  `json:"rowid"`
+	NewAccount bool   `json:"new_acct"`
 }
 
 func LogIn(host string) error {
@@ -43,12 +49,21 @@ func LogIn(host string) error {
 		switch statusCode {
 		case 200:
 		case 404:
-			msg = "E-mail or username not found."
+			msg = "E-mail or username not found." // TODO: translate
 			continue
 		default:
 			return pkgErrors.Wrap(errors.New("HTTP "+strconv.Itoa(statusCode)), user)
 		}
-		// look up
+
+		var account Account
+		if err := json.Unmarshal(body, &account); err != nil {
+			return err
+		}
+		if account.NewAccount {
+			// new account -- create a password
+		} else {
+			// old account -- ask for their password
+		}
 
 		password = ""
 		button = dialog.Cancel
