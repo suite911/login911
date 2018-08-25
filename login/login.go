@@ -32,6 +32,7 @@ func LogIn(host string) (*Token, error) {
 	var email, username, msg string
 	var button int8
 	user := path.Join(host, "user")
+	logIn := path.Join(host, "login")
 	for {
 		dialog.New("email", &email, &username, &button, msg)
 		switch button {
@@ -84,7 +85,7 @@ func LogIn(host string) (*Token, error) {
 				}
 			}
 			var args fasthttp.Args
-			statusCode, body, err := fasthttp.Post(nil, user, &args)
+			statusCode, body, err := fasthttp.Post(nil, logIn, &args)
 			if err != nil {
 				return nil, err
 			}
@@ -94,7 +95,7 @@ func LogIn(host string) (*Token, error) {
 				msg = "It doesn't look like that was your password." // TODO: translate
 				continue
 			default:
-				return nil, pkgErrors.Wrap(errors.New("HTTP "+strconv.Itoa(statusCode)), user)
+				return nil, pkgErrors.Wrap(errors.New("HTTP "+strconv.Itoa(statusCode)), logIn)
 			}
 			token = new(Token)
 			if err := json.Unmarshal(body, &token); err != nil {
