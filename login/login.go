@@ -1,6 +1,7 @@
 package login
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"path"
@@ -12,6 +13,7 @@ import (
 	pkgErrors "github.com/pkg/errors"
 	"github.com/valyala/fasthttp"
 	"golang.org/x/crypto/argon2"
+	"golang.org/x/crypto/sha3"
 )
 
 type Account struct {
@@ -95,6 +97,16 @@ func LogIn(host string) (*Token, error) {
 			if account.HasPassword {
 				// old account -- verify their password
 				//args.Set("key", key)
+				rnd := make([]byte, 32, 32)
+				if _, err := rand.Read(rnd); err != nil {
+					return err
+				}
+				args.SetBytesV("rand", rnd)
+				buf := make([]byte, len(rnd), len(rnd) + len(key))
+				copy(buf, rnd)
+				buf = append(buf, key...)
+				dig := sha3.Sum256(buf)
+				args.SetBytesV("dig", dig[:])
 			} else {
 				// new account -- set their password
 				args.Set("key", key)
