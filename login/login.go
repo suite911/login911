@@ -31,8 +31,8 @@ type Token struct {
 func LogIn(host string) (*Token, error) {
 	var email, username, msg string
 	var button int8
-	user := path.Join(host, "user")
-	logIn := path.Join(host, "login")
+	user := path.Join(host, "api", "user")
+	logIn := path.Join(host, "api", "login")
 	for {
 		dialog.New("email", &email, &username, &button, msg)
 		switch button {
