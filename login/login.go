@@ -13,37 +13,40 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type Login struct {
-	var Email, Username string
-	var PasswordHash    []byte
-}
-
 type Account struct {
 	ID          int64  `json:"id"`
 	RowID       int64  `json:"rowid"`
 	HasPassword bool   `json:"has_pw"`
 }
 
-func LogIn(host string) error {
-	var login Login
-	var msg, password string
+type Token struct {
+	ID         int64     `json:"id"`
+	RowID      int64     `json:"rowid"`
+	Email      string    `json:"email"`
+	Username   string    `json:"username"`
+	SessionKey []byte    `json:"session_key"`
+	Expiration time.Time `json:"expiration"`
+}
+
+func LogIn(host string) (*Token, error) {
+	var email, username, msg string
 	var button int8
 	user := path.Join(host, "user")
 	for {
-		dialog.New("email", &login.Email, &username, &button, msg)
+		dialog.New("email", &email, &username, &button, msg)
 		switch button {
 		case dialog.Cancel:
-			return error911.NewCancel()
+			return nil, error911.NewCancel()
 		case dialog.Register:
-			if err := register(host, login.Email, login.Username); err != nil {
-				return err
+			if err := register(host, email, username); err != nil {
+				return nil, err
 			}
 			continue
 		}
 		var args fasthttp.Args
 		statusCode, body, err := fasthttp.Post(nil, user, &args)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		switch statusCode {
 		case 200:
@@ -51,17 +54,46 @@ func LogIn(host string) error {
 			msg = "E-mail or username not found." // TODO: translate
 			continue
 		default:
-			return pkgErrors.Wrap(errors.New("HTTP "+strconv.Itoa(statusCode)), user)
+			return nil, pkgErrors.Wrap(errors.New("HTTP "+strconv.Itoa(statusCode)), user)
 		}
 
 		var account Account
 		if err := json.Unmarshal(body, &account); err != nil {
-			return err
+			return nil, err
 		}
-		if account.HasPassword {
-			// old account -- ask for their password
-		} else {
-			// new account -- create a password
+		for {
+			var password, retype string
+			if account.HasPassword {
+				// old account -- ask for their password
+				dialog.New("password", &password, &button)
+			} else {
+				// new account -- ask them to create a password
+				dialog.New("password", &password, &retype, &button)
+			}
+			if button == dialog.Cancel {
+				return nil, error911.NewCancel()
+			}
+			if account.HasPassword {
+				// old account -- verify their password
+			} else {
+				// new account -- set their password
+				if retype != password {
+					continue
+				}
+			}
+			var args fasthttp.Args
+			statusCode, body, err := fasthttp.Post(nil, user, &args)
+			if err != nil {
+				return nil, err
+			}
+			switch statusCode {
+			case 200, 201:
+			case 404:
+				msg = "E-mail or username not found." // TODO: translate
+				continue
+			default:
+				return nil, pkgErrors.Wrap(errors.New("HTTP "+strconv.Itoa(statusCode)), user)
+			}
 		}
 
 		password = ""
