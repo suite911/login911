@@ -17,6 +17,7 @@ import (
 type Account struct {
 	ID          int64  `json:"id"`
 	RowID       int64  `json:"rowid"`
+	Salt        []byte `json:"salt"`
 	HasPassword bool   `json:"has_pw"`
 }
 
@@ -87,10 +88,17 @@ func LogIn(host string) (*Token, error) {
 					continue
 				}
 			}
+			key := argon2.IDKey([]byte(password), account.Salt, 1, 64*1024, 4, 32)
 			var args fasthttp.Args
 			args.Set("rowid", strconv.FormatInt(account.RowID, 10))
 			args.Set("id", strconv.FormatInt(account.ID, 10))
-			args.Set("hash", hash)
+			if account.HasPassword {
+				// old account -- verify their password
+				//args.Set("key", key)
+			} else {
+				// new account -- set their password
+				args.Set("key", key)
+			}
 			statusCode, body, err := fasthttp.Post(nil, logIn, &args)
 			if err != nil {
 				return nil, err
