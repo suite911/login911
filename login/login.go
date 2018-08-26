@@ -2,6 +2,7 @@ package login
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"path"
@@ -97,16 +98,18 @@ func LogIn(host string) (*Token, error) {
 			if account.HasPassword {
 				// old account -- verify their password
 				//args.Set("key", key)
-				rnd := make([]byte, 32, 32)
+				buf := make([]byte, 32, 32 + len(key))
 				if _, err := rand.Read(rnd); err != nil {
 					return err
 				}
-				args.SetBytesV("rand", rnd)
-				buf := make([]byte, len(rnd), len(rnd) + len(key))
-				copy(buf, rnd)
+				hexRand := make([]byte, hex.EncodedLen(32))
+				hex.Encode(hexRand, buf[:32])
+				args.SetBytesV("rand", string(hexRand))
 				buf = append(buf, key...)
 				dig := sha3.Sum256(buf)
-				args.SetBytesV("dig", dig[:])
+				hexDig := make([]byte, hex.EncodedLen(len(dig)))
+				hex.Encode(hexDig, dig)
+				args.SetBytesV("dig", string(hexDig))
 			} else {
 				// new account -- set their password
 				args.Set("key", key)
